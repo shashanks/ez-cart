@@ -26,11 +26,6 @@ import android.widget.Toast;
 
 public class EZCart extends ListActivity {
    
-	/*
-    * Funny thing really... we don't need this... but hey it can't hurt
-    */
-	private static final int ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING = 42;
-	
 	private static final int ACTIVITY_EDIT=1;
 	/*
 	 * Integer constants for menus
@@ -183,13 +178,14 @@ public class EZCart extends ListActivity {
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
 				String listName = input.getText().toString();
+				long control=0;
 				if (listName.length()==0) {
 					dialog.dismiss();
 					notifyEmpty();
 				}
 				if (mDbHelper.listExists(listName) == false) {
-					long control = mDbHelper.createList(listName);
-					if (control==DbHelper.NOTIFY_TABLE_CREATION_PROBLEM) {
+					control = mDbHelper.createList(listName);
+					if (control==-1) {
 						notifyProblem();
 					}
 					fillData();
@@ -216,19 +212,23 @@ public class EZCart extends ListActivity {
 	 * This method is just notifier if user has entered empty string
 	 */
 	private void notifyEmpty() {
-		Toast.makeText(this, "You must enter name of the list.", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "You must enter name of the list.", Toast.LENGTH_SHORT).show();
 	}
 	
 	/*
 	 * This method notifies user that list with given name exists
 	 */
 	private void notifyExists() {
-		Toast.makeText(this, "Sorry, but list with that name exists already.", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Sorry, but list with that name exists already.", Toast.LENGTH_SHORT).show();
 		
 	}
+	/*
+	 * This method notifies user if there was problem creating list
+	 */
 	private void notifyProblem() {
-		Toast.makeText(this, "Try diferent name for the list", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "Something went wrong. Why dont you try diferent name.", Toast.LENGTH_LONG).show();
 	}
+	
 	/*
 	 * Starts activity for editing lists
 	 * 
@@ -277,6 +277,9 @@ public class EZCart extends ListActivity {
 		super.onBackPressed();
 		mDbHelper.close();
 	}
+
+
+
 
 
 

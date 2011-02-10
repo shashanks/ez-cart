@@ -30,9 +30,6 @@ public class DbHelper {
 	public static final String DATABASE_NAME="EZCart.db";
 	public static final int DATABASE_VERSION=2;
 	
-	/* This constant is used to notify that there was problem creating table in DB */
-	public static final long NOTIFY_TABLE_CREATION_PROBLEM = -2;
-	
 	public static final String LIST_TABLE_NAME = "list_table_name";
 	
 	private static final String CREATE_LIST_TABLE ="create table " + LIST_TABLE_NAME + " (" + KEY_LIST_ROWID + " integer primary key autoincrement, "
@@ -85,14 +82,12 @@ public class DbHelper {
 	public long createList (String name) {
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(KEY_LIST_NAME, name);
-		name = "_" + name; 
 		name = name.replace(' ', '_');
-		name = name.replace(".", "_D_");
-		name = name.replace("!", "_E_");
-		name = name.replace("?", "_Q_");
-		name = name.replace("@", "_AT_");
-		name = name.replace("&", "_AND_");
-			
+		name = name.replace(".", "_dot_");
+		name = name.replace(",", "_comma_");
+		name = name.replace("!", "_excl_");
+		name = name.replace("?", "_quest_");
+		name = name.replace("@", "_at_");
 		initialValues.put(KEY_LIST_TABLE_NAME, name);
 		
 		/* this creates table in the DB for list */
@@ -100,7 +95,7 @@ public class DbHelper {
 			mDb.execSQL(createSQLStatementAdd(name));
 			return mDb.insert(LIST_TABLE_NAME, null, initialValues);
 		} catch (SQLException e) {
-			return NOTIFY_TABLE_CREATION_PROBLEM;
+			return -1;
 		}
 		
 	}
@@ -319,7 +314,7 @@ public class DbHelper {
 			String name = c.getString(LIST_NAME_COLUMN);
 			listOfNames.add(name);
 		}
-		return listOfNames.indexOf(listName) > 0;
+		return listOfNames.indexOf(listName) > -1;
 	}
 	
 	
