@@ -1,4 +1,25 @@
-
+/*
+ * EZ Cart
+ * Version: 0.40
+ * License: GPLv3
+ * Author: idiomatik.80@gmail.com (Nikola Trandafilovic)
+ * 
+ * 
+ * This is simple program intended for keeping track of bought items.
+ * It could be also used as simple check list for shopping with possibility to 
+ * add prices later. It supports multiple lists in which it is possible to add
+ * and remove items 
+ * 
+ * Also it was created out of need to keep track of expenses when
+ * dealing with lots of items.
+ * 
+ * This program seemed to me as a great starting point to begin 
+ * learning android and I hope that it would be useful for someone
+ * who is just started developing applications for android. 
+ * 
+ * So, feel free to fire E-mail my way if you have questions or suggestions.
+ *  
+ */
 
 
 
@@ -29,6 +50,7 @@ public class EZCart extends ListActivity {
 	/*
     * Funny thing really... we don't need this... but hey it can't hurt
     */
+	@SuppressWarnings("unused")
 	private static final int ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING = 42;
 	
 	private static final int ACTIVITY_EDIT=1;
