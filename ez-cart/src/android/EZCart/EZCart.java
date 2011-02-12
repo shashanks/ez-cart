@@ -25,6 +25,8 @@
 
 package android.EZCart;
 
+import java.lang.ref.SoftReference;
+
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -38,6 +40,8 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -48,18 +52,19 @@ import android.widget.Toast;
 public class EZCart extends ListActivity {
    
 	/*
-    * Funny thing really... we don't need this... but hey it can't hurt
+    * Funny thing really... we don't need this... 
     */
 	@SuppressWarnings("unused")
 	private static final int ANSWER_TO_THE_ULTIMATE_QUESTION_OF_LIFE_THE_UNIVERSE_AND_EVERYTHING = 42;
 	
 	private static final int ACTIVITY_EDIT=1;
 	/*
-	 * Integer constants for menus
+	 * Integer constants for menu id's
 	 */
 	private static final int INSERT_ID = Menu.FIRST;
 	private static final int DELETE_ALL_ID = Menu.FIRST+1;
 	private static final int DELETE_ID = Menu.FIRST+2;
+	private static final int RENAME_ID = Menu.FIRST+3;
 	/*
 	 * String constants for dialogs
 	 */
@@ -75,7 +80,8 @@ public class EZCart extends ListActivity {
 	 */
 	private static final String MENU_CREATE = "Create list";
 	private static final String MENU_CLEAR	= "Remove all lists";
-	private static final String MENU_DELETE = "Remove";
+	private static final String CONTEXT_MENU_DELETE = "Remove";
+	private static final String CONTEXT_MENU_RENAME = "Rename list";
 	private static final int DELETE_GROUP = 1;
 	
 	/** Called when the activity is first created. */
@@ -249,7 +255,7 @@ public class EZCart extends ListActivity {
 		
 	}
 	private void notifyProblem() {
-		Toast.makeText(this, "Try diferent name for the list", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, "There was problem creating list. Try diferent name for the list", Toast.LENGTH_LONG).show();
 	}
 	/*
 	 * Starts activity for editing lists
@@ -276,7 +282,8 @@ public class EZCart extends ListActivity {
 	public void onCreateContextMenu(ContextMenu menu, View v,
 			ContextMenuInfo menuInfo) {
 		super.onCreateContextMenu(menu, v, menuInfo);
-		menu.add(0, DELETE_ID, 0, MENU_DELETE);
+		menu.add(0, RENAME_ID, 0, CONTEXT_MENU_RENAME);
+		menu.add(0, DELETE_ID, 0, CONTEXT_MENU_DELETE);
 	}
 
 
@@ -290,9 +297,54 @@ public class EZCart extends ListActivity {
 		case DELETE_ID:
 			mItemId = info.id;
 			deleteDialog();
+			break;
+		case RENAME_ID:
+			mItemId = info.id;
+			renameDialog();
+			break;
 		}
 		return super.onContextItemSelected(item);
 	}
+	
+	private void renameDialog() {
+		Cursor list = mDbHelper.getList(mItemId);
+		String oldName = list.getString(mDbHelper.LIST_NAME_COLUMN);
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+		final EditText input =(EditText) new EditText(this);
+		input.setText(oldName);
+		input.setSelectAllOnFocus(true);
+		input.setSingleLine(true);
+		input.setInputType(InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+		dialog.setView(input)
+			.setPositiveButton(LIST_SAVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				String listName = input.getText().toString();
+				if (listName.length()==0) {
+					dialog.dismiss();
+				} else {
+					mDbHelper.setListName(mItemId, listName);
+					fillData();
+					dialog.dismiss();
+				}
+				
+			}
+
+		}).
+		setNegativeButton(LIST_CANCEL, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		
+		dialog.show();
+		
+	}
+	
+	
 	
 	@Override
 	public void onBackPressed() {

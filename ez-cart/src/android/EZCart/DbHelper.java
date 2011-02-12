@@ -18,7 +18,7 @@ public class DbHelper {
 	public static final String KEY_LIST_ROWID = "_id";
 	public static final String KEY_LIST_NAME = "name";
 	public static final String KEY_LIST_TABLE_NAME = "table_name";
-	
+		
 	/* Constants needed for items in the list */
 	public static final String KEY_ITEM_NAME="name";
 	public static final String KEY_ITEM_QUANTITY="quantity";
@@ -38,8 +38,8 @@ public class DbHelper {
 	private static final String CREATE_LIST_TABLE ="create table " + LIST_TABLE_NAME + " (" + KEY_LIST_ROWID + " integer primary key autoincrement, "
     + KEY_LIST_NAME + " text not null, " + KEY_LIST_TABLE_NAME + " text not null "  + ");";
 
-	private static final int LIST_NAME_COLUMN = 1;
-	private static final int TABLE_NAME_COLUMN = 2;
+	public static final int LIST_NAME_COLUMN = 1;
+	public static final int TABLE_NAME_COLUMN = 2;
 	
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 			
@@ -83,16 +83,12 @@ public class DbHelper {
 	 * @return row id of the newly inserted row or -1 if it cannot be created
 	 */
 	public long createList (String name) {
+		Cursor c = getAllLists();
+		c.moveToLast();
+		long newPosition = c.getLong(0) + 1;
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(KEY_LIST_NAME, name);
-		name = "_" + name; 
-		name = name.replace(' ', '_');
-		name = name.replace(".", "_D_");
-		name = name.replace("!", "_E_");
-		name = name.replace("?", "_Q_");
-		name = name.replace("@", "_AT_");
-		name = name.replace("&", "_AND_");
-			
+		name = "ListId_" + newPosition; 		
 		initialValues.put(KEY_LIST_TABLE_NAME, name);
 		
 		/* this creates table in the DB for list */
@@ -103,6 +99,12 @@ public class DbHelper {
 			return NOTIFY_TABLE_CREATION_PROBLEM;
 		}
 		
+	}
+	
+	public void setListName(long id, String name) {
+		ContentValues values = new ContentValues();
+		values.put(KEY_LIST_NAME, name);
+		mDb.update(LIST_TABLE_NAME, values, KEY_LIST_ROWID + "=" + id , null);
 	}
 	/**
 	 * This method deletes row in the LIST_TABLE_NAME of the selected id
