@@ -14,6 +14,9 @@ public class DbHelper {
 	
 	public static final String TAG="EZCart.db";
 	
+	// used to get id of the list in list table
+	private static final int ID_COLUMN_INDEX = 0;
+	
 	/* Constants for following created lists */
 	public static final String KEY_LIST_ROWID = "_id";
 	public static final String KEY_LIST_NAME = "name";
@@ -38,8 +41,8 @@ public class DbHelper {
 	private static final String CREATE_LIST_TABLE ="create table " + LIST_TABLE_NAME + " (" + KEY_LIST_ROWID + " integer primary key autoincrement, "
     + KEY_LIST_NAME + " text not null, " + KEY_LIST_TABLE_NAME + " text not null "  + ");";
 
-	public static final int LIST_NAME_COLUMN = 1;
-	public static final int TABLE_NAME_COLUMN = 2;
+	public final int LIST_NAME_COLUMN = 1;
+	public final int TABLE_NAME_COLUMN = 2;
 	
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 			
@@ -78,14 +81,20 @@ public class DbHelper {
 		mDbHelper.close();
 	}
 	/**
-	 * Inserts name of the newly created list in the lists table
+	 * Inserts name of the newly created list in the lists table and 
+	 * creates new table in data base using _id from the list table for
+	 * name of newly created table
+	 * 
 	 * @param name name of the list
 	 * @return row id of the newly inserted row or -1 if it cannot be created
 	 */
 	public long createList (String name) {
+		long newPosition = 1;
 		Cursor c = getAllLists();
-		c.moveToLast();
-		long newPosition = c.getLong(0) + 1;
+		if (c.getCount()>0) {
+			c.moveToLast();
+			newPosition = c.getLong(ID_COLUMN_INDEX) + 1;
+		}
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(KEY_LIST_NAME, name);
 		name = "ListId_" + newPosition; 		

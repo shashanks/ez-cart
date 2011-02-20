@@ -17,6 +17,9 @@ public class ItemEdit extends Activity{
 		setContentView(R.layout.item_edit);
 		
 		Bundle listName = getIntent().getExtras();
+		
+		mActionId = listName.getInt(ListEdit.REQUEST_CODE);
+		
 		mListName = listName.getString(DbHelper.KEY_ITEM_TABLE_NAME);
 		
 		mNameEditText = (EditText) findViewById(R.id.NameEditText);
@@ -66,12 +69,14 @@ public class ItemEdit extends Activity{
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		canceled = true;
+		if (mActionId==ListEdit.ACTIVITY_CREATE) mCanceled = true;
+		
 	}
 
 	@Override
 	protected void onPause() {
 		super.onPause();
+		//mPaused=true;
 		saveState();
 		
 	}
@@ -80,7 +85,7 @@ public class ItemEdit extends Activity{
 	protected void onResume() {
 		super.onResume();
 		populateFields();
-		if (paused) {
+		if (mPaused) {
 			removeTempEntry();
 		}
 	}
@@ -88,14 +93,14 @@ public class ItemEdit extends Activity{
 	private void removeTempEntry() {
 		mDbHelper.removeItem(mListName, mRowId);
 		mRowId=null;
-		paused=false;
+		mPaused=false;
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		saveState();
-		paused=true;
+		mPaused=true;
 		outState.putLong(DbHelper.KEY_ITEM_ROWID, mRowId);
 	}
 	
@@ -111,9 +116,9 @@ public class ItemEdit extends Activity{
 		if (priceText.length()>0) {
 			price = Double.valueOf(priceText);
 		}
-		double totalPrice = quantity*price;
+		double totalPrice =(double) (Math.round(quantity*price*100))/100;
 		boolean done = mDoneCheckBox.isChecked();
-		if (!canceled) {
+		if (!mCanceled) {
 			if (mRowId == null) {
 				long id = mDbHelper.addItem(mListName, name, price, quantity, totalPrice, done);
 				if (id > 0) {
@@ -125,8 +130,18 @@ public class ItemEdit extends Activity{
 		}
 	}
 
-	private boolean canceled = false;
-	private boolean paused = false;
+	/*
+	 * Instance variables
+	 */
+	
+	// used to check if creating and editing has been canceled 
+	private boolean mCanceled = false;
+	// used to check if temp entry should be deleted from DB in case of creation
+	// of new entry or leaving old entry in case of editing if it is canceled
+	private int mActionId = ListEdit.ACTIVITY_CREATE;
+	// used to track if activity was paused and should entries be deleted after
+	// restore 
+	private boolean mPaused = false;
 	private Long mRowId;
 	
 	private String mListName;

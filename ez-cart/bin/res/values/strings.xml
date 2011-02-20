@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="hello">Hello World, main!</string>
-    <string name="app_name">EZ Cart</string>
-	<string name="no_lists">There are no lists currently. \nHit menu and create list</string>
-	<string name="item_value">Price per item:  </string>
-	<string name="number_of_items">Items:  </string>
-	<string name="row_click_handler">myClickHandler</string>
-</resources>

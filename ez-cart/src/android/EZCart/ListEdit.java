@@ -23,8 +23,10 @@ public class ListEdit extends ListActivity {
 	/*
 	 * Integer constants for activities
 	 */
-	private static final int ACTIVITY_CREATE=0;
-	private static final int ACTIVITY_EDIT=1;
+	public static final int ACTIVITY_CREATE=0;
+	public static final int ACTIVITY_EDIT=1;
+	//used to pass activity id to the item edit activity
+	public static final String REQUEST_CODE="activity_id";
 	/*
 	 * Integer constants for menus
 	 */
@@ -159,15 +161,19 @@ public class ListEdit extends ListActivity {
 	private void addItem() {
 		Intent i=new Intent(this, ItemEdit.class);
 		i.putExtra(DbHelper.KEY_ITEM_TABLE_NAME, mTableName);
+		i.putExtra(REQUEST_CODE, ACTIVITY_CREATE);
 		startActivityForResult(i, ACTIVITY_CREATE);
-//		mDbHelper.addItem(mTableName, "Test", 200.00, 1, 220, true);
 		refreshData();
 	}
 	
-	
+	/*
+	 * This just refreshes list
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onActivityResult(int, int, android.content.Intent)
+	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
 		refreshData();
 	}
@@ -220,7 +226,7 @@ public class ListEdit extends ListActivity {
 			Intent i = new Intent(this, ItemEdit.class);
 			i.putExtra(DbHelper.KEY_ITEM_ROWID, info.id);
 			i.putExtra(DbHelper.KEY_ITEM_TABLE_NAME, mTableName);
-
+			i.putExtra(REQUEST_CODE, ACTIVITY_EDIT);
 			startActivityForResult(i, ACTIVITY_EDIT);
 			return true;
 		}
@@ -272,6 +278,12 @@ public class ListEdit extends ListActivity {
 				total+=allItems.getDouble(TOTAL_ITEM_VALUE_COLUMN);
 			}
 		}
+		
+		/* This line is needed because sometimes in world of computers 
+		 * 116.52 + 34.00 is 150.5199999999999999... 
+		 */
+		total = (double) (Math.round(total*100))/100;
+ 		
 		TextView tv=(TextView) findViewById(R.id.MainTotalTextView);
 		tv.setText(Double.toString(total));
 	}

@@ -25,8 +25,6 @@
 
 package android.EZCart;
 
-import java.lang.ref.SoftReference;
-
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
@@ -40,8 +38,6 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -273,7 +269,7 @@ public class EZCart extends ListActivity {
 	
 	/*
 	 * Creates context menu
-	 * 
+	 * It has menu entries for renaming and deleting lists
 	 * 
 	 * (non-Javadoc)
 	 * @see android.app.Activity#onCreateContextMenu(android.view.ContextMenu, android.view.View, android.view.ContextMenu.ContextMenuInfo)
@@ -288,7 +284,12 @@ public class EZCart extends ListActivity {
 
 
 
-
+	/*
+	 * Depending on the selection this method calls deleteDialog or renameDialog
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onContextItemSelected(android.view.MenuItem)
+	 */
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
@@ -306,6 +307,9 @@ public class EZCart extends ListActivity {
 		return super.onContextItemSelected(item);
 	}
 	
+	/*
+	 * This method creates dialog for renaming lists
+	 */
 	private void renameDialog() {
 		Cursor list = mDbHelper.getList(mItemId);
 		String oldName = list.getString(mDbHelper.LIST_NAME_COLUMN);
@@ -345,7 +349,12 @@ public class EZCart extends ListActivity {
 	}
 	
 	
-	
+	/*
+	 * This method just closes database on exit
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onBackPressed()
+	 */
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
