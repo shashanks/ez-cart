@@ -14,10 +14,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class ListEdit extends ListActivity {
 	/*
@@ -25,8 +27,6 @@ public class ListEdit extends ListActivity {
 	 */
 	public static final int ACTIVITY_CREATE=0;
 	public static final int ACTIVITY_EDIT=1;
-	//used to pass activity id to the item edit activity
-	public static final String REQUEST_CODE="activity_id";
 	/*
 	 * Integer constants for menus
 	 */
@@ -34,9 +34,12 @@ public class ListEdit extends ListActivity {
 	private static final int DELETE_ID = Menu.FIRST+1;
 	private static final int DELETE_ALL_ID = Menu.FIRST+2;
 	private static final int EDIT_ID=Menu.FIRST+3;
+	private static final int EXPORT_ID = Menu.FIRST+4;
+	private static final int UNCHECK_ALL_ID = Menu.FIRST+5;
 	/*
 	 * Integer constants for data base columns 
 	 */
+	private static final int ID_COLUMN = 0;
 	private static final int TOTAL_ITEM_VALUE_COLUMN = 4;
 	private static final int DONE_COLUMN = 5;
 	private static final int LIST_NAME = 1;
@@ -44,10 +47,13 @@ public class ListEdit extends ListActivity {
 	/*
 	 * String constants for dialogs
 	 */
-	private static final String DELETE_DIALOG_STRING = "Are you sure?";
+	private static final String CONFIRM_DIALOG_STRING = "Are you sure?";
 	private static final String POSITIVE = "Yes";
 	private static final String NEGATIVE = "No";
-	
+	/*
+	 * Used to hide menu entries when they are not needed
+	 */
+	private static final int HIDABLE_GROUP = 1;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -60,16 +66,24 @@ public class ListEdit extends ListActivity {
 		registerForContextMenu(getListView());
 	}
 	
+	/*
+	 * This method gets table name from intent and sets title to activity
+	 */
 	private void getTableName() {
 		Bundle extras = getIntent().getExtras();
-		Long listRowId =  extras.getLong(DbHelper.KEY_LIST_ROWID);
-		Cursor listName = mDbHelper.getList(listRowId);
+		mListRowId = extras.getLong(DbHelper.KEY_LIST_ROWID);
+		Cursor listName = mDbHelper.getList(mListRowId);
 		String tableName = listName.getString(LIST_TABLE_NAME);
 		mTableName = tableName;
 		String name = listName.getString(LIST_NAME);
 		setTitle("EZ Cart - List: " + name);
 	}
-
+	
+	/*
+	 * This method populates fields and uses ViewBinder
+	 * to couple data from the data base and check box 
+	 * (note check box must have focusable set to false)
+	 */
 	private void fillData() {
 		String tableName = mTableName;	
 		Cursor list = mDbHelper.getAllItems(tableName);
@@ -121,7 +135,9 @@ public class ListEdit extends ListActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		menu.add(0, INSERT_ID, 1, "Insert item");
-		menu.add(0, DELETE_ALL_ID, 2, "Remove all items");
+		menu.add(HIDABLE_GROUP, DELETE_ALL_ID, 1, "Remove all items");
+		menu.add(HIDABLE_GROUP, EXPORT_ID, 2, "Export list");
+		menu.add(HIDABLE_GROUP, UNCHECK_ALL_ID, 2, "Uncheck all items");
 		return true;
 	}
 	/*
@@ -142,12 +158,51 @@ public class ListEdit extends ListActivity {
 			return true;
 		case DELETE_ALL_ID:
 			deleteDialog();
-			break;
+			return true;
+		case EXPORT_ID:
+			exportDialog();
+			return true;
+		case UNCHECK_ALL_ID:
+			uncheckAllDialog();
+			return true;
 		
 		}
 		return super.onMenuItemSelected(id, item);
 	}
 	
+	/*
+	 * This exports list to sd card and reports where it was exported 
+	 * if successful
+	 */
+	private void exportList() {
+		Exporter exp = new Exporter();
+		Cursor list = mDbHelper.getList(mListRowId);
+		Cursor items = mDbHelper.getAllItems(mTableName);
+		String fileLocation = exp.exportToFile(list, items);
+		Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
+		
+	}
+	
+	/*
+	 * This method unchecks all items in the list
+	 * Currently it's brute force (i.e. it goes through 
+	 * all items in the cursor), so if you know better way
+	 * please do tell
+	 */
+	private void uncheckAllItems() {
+		Cursor items = mDbHelper.getAllItems(mTableName);
+		items.moveToFirst();
+		for (items.move(-1); items.moveToNext(); items.isAfterLast()) {
+			if (items.getInt(DONE_COLUMN)==1) {
+				mDbHelper.updateDone(mTableName, items.getLong(ID_COLUMN), false);
+				Cursor c = (Cursor) getListView().getAdapter().getItem(0);
+				c.requery();
+			}
+		}
+		TextView tv=(TextView) findViewById(R.id.MainTotalTextView);
+		tv.setText("0.0");
+	}
+
 	/*
 	 * removes all items from the database
 	 * and refreshes list
@@ -158,10 +213,12 @@ public class ListEdit extends ListActivity {
 			return true;
 	}
 	
+	/*
+	 * Starts activity to create new item and adds it to the list
+	 */
 	private void addItem() {
 		Intent i=new Intent(this, ItemEdit.class);
 		i.putExtra(DbHelper.KEY_ITEM_TABLE_NAME, mTableName);
-		i.putExtra(REQUEST_CODE, ACTIVITY_CREATE);
 		startActivityForResult(i, ACTIVITY_CREATE);
 		refreshData();
 	}
@@ -183,7 +240,6 @@ public class ListEdit extends ListActivity {
 	 * It is used instead of fillData(); 
 	 */
 	
-
 	private void refreshData() {
 		Cursor c = mDbHelper.getAllItems(mTableName);
 		c.moveToLast();
@@ -226,7 +282,6 @@ public class ListEdit extends ListActivity {
 			Intent i = new Intent(this, ItemEdit.class);
 			i.putExtra(DbHelper.KEY_ITEM_ROWID, info.id);
 			i.putExtra(DbHelper.KEY_ITEM_TABLE_NAME, mTableName);
-			i.putExtra(REQUEST_CODE, ACTIVITY_EDIT);
 			startActivityForResult(i, ACTIVITY_EDIT);
 			return true;
 		}
@@ -267,7 +322,7 @@ public class ListEdit extends ListActivity {
 	 * It checks if item is checked (DONE_COLMN VALUE is 1 if it's checked) and ads 
 	 * value of total item value column.
 	 * NOTE: moveToFirst moves cursor to position 1, so offset is needed move(-1) since 
-	 * it is 0 based notation (0, 1, 2...)
+	 * it is 0 based enumeration (0, 1, 2...)
 	 */
 	private void calculateTotal() {
 		Cursor allItems = mDbHelper.getAllItems(mTableName);
@@ -295,7 +350,7 @@ public class ListEdit extends ListActivity {
 	 */
 	private void deleteDialog() {
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-		dialog.setMessage(DELETE_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
+		dialog.setMessage(CONFIRM_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -326,9 +381,80 @@ public class ListEdit extends ListActivity {
 		
 	}
 	
+	/*
+	 * Creates confirmation dialog for unchecking items
+	 * in current list, and if positive button is pressed then 
+	 * uncheckAllItems method is executed
+	 */
+	private void uncheckAllDialog() {
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+		dialog.setMessage(CONFIRM_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				uncheckAllItems();
+			}
+		}).setNegativeButton(NEGATIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		AlertDialog alertDialog = dialog.create();
+		alertDialog.show();
+	}
+	
+	/*
+	 * Creates confirmation dialog for exporting lists,
+	 * if positive button is pressed then  exportList
+	 * method is executed
+	 */
+	private void exportDialog() {
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+		dialog.setMessage(CONFIRM_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				exportList();
+			}
+		}).setNegativeButton(NEGATIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		AlertDialog alertDialog = dialog.create();
+		alertDialog.show();
+	}
+	
+	/*
+	 * 
+	 * This hides menu entries that are in the hidable group
+	 *  when list is empty
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onMenuOpened(int, android.view.Menu)
+	 */
+	@Override
+	public boolean onMenuOpened(int featureId, Menu menu) {
+		ListAdapter listAdapter = getListAdapter();
+		int count = listAdapter.getCount();
+		if (count==0) {
+			menu.setGroupVisible(HIDABLE_GROUP, false);
+		} else if (count>0){
+			menu.setGroupVisible(HIDABLE_GROUP, true);
+		}
+		return super.onMenuOpened(featureId, menu);
+	}
+
+
+
 	private int mDeleteId;
 	private long mItemId;
 	private String mTableName;
 	private DbHelper mDbHelper;
+	private Long mListRowId;
 	
 }

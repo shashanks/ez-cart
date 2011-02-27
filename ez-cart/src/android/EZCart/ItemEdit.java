@@ -1,3 +1,10 @@
+/*
+ * ItemEdit.java
+ * 
+ * This activity is used for editing and creating items in
+ * the list 
+ */
+
 package android.EZCart;
 
 import android.app.Activity;
@@ -18,10 +25,7 @@ public class ItemEdit extends Activity{
 		
 		Bundle listName = getIntent().getExtras();
 		
-		mActionId = listName.getInt(ListEdit.REQUEST_CODE);
-		
 		mListName = listName.getString(DbHelper.KEY_ITEM_TABLE_NAME);
-		
 		mNameEditText = (EditText) findViewById(R.id.NameEditText);
 		mQuantityEditText = (EditText) findViewById(R.id.QuantityEditText);
 		mQuantityEditText.setSelectAllOnFocus(true);
@@ -51,10 +55,20 @@ public class ItemEdit extends Activity{
 			}
 		});
 	}
-	
+	/*
+	 * This populates fields. if it comes back from suspended activity
+	 * it reads from the temporary entry in other cases it reads regular 
+	 * entry from the table
+	 */
 	private void populateFields() {
-		if (mRowId!=null) {
-			Cursor item = mDbHelper.getItem(mListName, mRowId);
+		Long id;
+		if (mPaused) {
+			id = mTempRowId;
+		} else {
+			id = mRowId;
+		}
+		if (id!=null) {
+			Cursor item = mDbHelper.getItem(mListName, id);
 			startManagingCursor(item);
 			mNameEditText.setText(item.getString(item.getColumnIndexOrThrow(DbHelper.KEY_ITEM_NAME)));
 			mQuantityEditText.setText(item.getString(item.getColumnIndexOrThrow(DbHelper.KEY_ITEM_QUANTITY)));
@@ -64,52 +78,44 @@ public class ItemEdit extends Activity{
 		}
 	}
 	
-	
+	/*
+	 * This kills activity
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onBackPressed()
+	 */
 	
 	@Override
 	public void onBackPressed() {
 		super.onBackPressed();
-		if (mActionId==ListEdit.ACTIVITY_CREATE) mCanceled = true;
+		finish();
 		
 	}
-
+	
+	/*
+	 * This just sets mPaused field to true to be used in
+	 * populateFields and onResume methods
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onPause()
+	 */
 	@Override
 	protected void onPause() {
 		super.onPause();
-		//mPaused=true;
-		saveState();
+		mPaused=true;
 		
 	}
-
-	@Override
-	protected void onResume() {
-		super.onResume();
-		populateFields();
-		if (mPaused) {
-			removeTempEntry();
-		}
-	}
 	
-	private void removeTempEntry() {
-		mDbHelper.removeItem(mListName, mRowId);
-		mRowId=null;
-		mPaused=false;
-	}
-
-	@Override
-	protected void onSaveInstanceState(Bundle outState) {
-		super.onSaveInstanceState(outState);
-		saveState();
-		mPaused=true;
-		outState.putLong(DbHelper.KEY_ITEM_ROWID, mRowId);
-	}
+	/*
+	 * Saves current state in a new row of the current table
+	 */
 	
-	private void saveState() {
+	private void saveTempState() {
 		String name = mNameEditText.getText().toString();
 		String quantityText = mQuantityEditText.getText().toString();
-		int quantity = 1;
+		double quantity = 1;
 		if (quantityText.length()>0) {
-			quantity = Integer.valueOf(quantityText);
+			quantity = Double.valueOf(quantityText);
 		}			
 		String priceText = mPriceEditText.getText().toString();
 		double price = 0;
@@ -118,31 +124,84 @@ public class ItemEdit extends Activity{
 		}
 		double totalPrice =(double) (Math.round(quantity*price*100))/100;
 		boolean done = mDoneCheckBox.isChecked();
-		if (!mCanceled) {
-			if (mRowId == null) {
-				long id = mDbHelper.addItem(mListName, name, price, quantity, totalPrice, done);
-				if (id > 0) {
-					mRowId = id;
-				}
-			} else {
-				mDbHelper.updateItem(mListName, mRowId, name, price, quantity, totalPrice, done);
-			}
+		mTempRowId = mDbHelper.addItem(mListName, name, price, quantity, totalPrice, done);
+		
+	}
+	
+	/*
+	 * On resume populates fields and calls removeTempEntry if it comes back
+	 * from pause 
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onResume()
+	 */
+	@Override
+	protected void onResume() {
+		super.onResume();
+		populateFields();
+		if (mPaused) removeTempEntry();
+		
+	}
+	/*
+	 * This removes temporary entry and resets mPaused field
+	 */
+	private void removeTempEntry() {
+		mDbHelper.removeItem(mListName, mTempRowId);
+		mPaused=false;
+	}
+	/*
+	 * This saves temporary state to a new row in the
+	 * table and sets mPaused to true
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
+	 */
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		mPaused=true;
+		saveTempState();
+		outState.putLong(DbHelper.KEY_ITEM_ROWID, mTempRowId);
+	}
+	
+	
+	/*
+	 * This method saves current state to a new row of the table if mRowId is null
+	 * or updates item if mRowId is not null
+	 */
+	private void saveState() {
+		String name = mNameEditText.getText().toString();
+		String quantityText = mQuantityEditText.getText().toString();
+		double quantity = 1;
+		if (quantityText.length()>0) {
+			quantity = Double.valueOf(quantityText);
+		}			
+		String priceText = mPriceEditText.getText().toString();
+		double price = 0;
+		if (priceText.length()>0) {
+			price = Double.valueOf(priceText);
 		}
+		double totalPrice =(double) (Math.round(quantity*price*100))/100;
+		boolean done = mDoneCheckBox.isChecked();
+		if (mRowId == null) {
+			long id = mDbHelper.addItem(mListName, name, price, quantity, totalPrice, done);
+			if (id > 0) {
+				mRowId = id;
+			}
+		} else {
+			mDbHelper.updateItem(mListName, mRowId, name, price, quantity, totalPrice, done);
+		}
+	
 	}
 
 	/*
 	 * Instance variables
 	 */
 	
-	// used to check if creating and editing has been canceled 
-	private boolean mCanceled = false;
-	// used to check if temp entry should be deleted from DB in case of creation
-	// of new entry or leaving old entry in case of editing if it is canceled
-	private int mActionId = ListEdit.ACTIVITY_CREATE;
 	// used to track if activity was paused and should entries be deleted after
 	// restore 
 	private boolean mPaused = false;
 	private Long mRowId;
+	private Long mTempRowId;
 	
 	private String mListName;
 	private EditText mNameEditText;

@@ -40,6 +40,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.EditText;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
@@ -61,10 +62,11 @@ public class EZCart extends ListActivity {
 	private static final int DELETE_ALL_ID = Menu.FIRST+1;
 	private static final int DELETE_ID = Menu.FIRST+2;
 	private static final int RENAME_ID = Menu.FIRST+3;
+	private static final int EXPORT_ID = Menu.FIRST+4;
 	/*
 	 * String constants for dialogs
 	 */
-	private static final String DELETE_DIALOG_STRING = "Are you sure?";
+	private static final String CONFIRM_DIALOG_STRING = "Are you sure?";
 	private static final String POSITIVE = "Yes";
 	private static final String NEGATIVE = "No";
 	
@@ -78,7 +80,7 @@ public class EZCart extends ListActivity {
 	private static final String MENU_CLEAR	= "Remove all lists";
 	private static final String CONTEXT_MENU_DELETE = "Remove";
 	private static final String CONTEXT_MENU_RENAME = "Rename list";
-	private static final int DELETE_GROUP = 1;
+	private static final int HIDABLE_GROUP = 1;
 	
 	/** Called when the activity is first created. */
     @Override
@@ -121,7 +123,7 @@ public class EZCart extends ListActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		super.onCreateOptionsMenu(menu);
 		menu.add(0, INSERT_ID, 1, MENU_CREATE);
-		menu.add(DELETE_GROUP, DELETE_ALL_ID, 2, MENU_CLEAR);
+		menu.add(HIDABLE_GROUP, DELETE_ALL_ID, 2, MENU_CLEAR);
 		
 		return true;
 	}
@@ -159,7 +161,7 @@ public class EZCart extends ListActivity {
 	 */
 	private void deleteDialog() {
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-		dialog.setMessage(DELETE_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
+		dialog.setMessage(CONFIRM_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
@@ -280,6 +282,7 @@ public class EZCart extends ListActivity {
 		super.onCreateContextMenu(menu, v, menuInfo);
 		menu.add(0, RENAME_ID, 0, CONTEXT_MENU_RENAME);
 		menu.add(0, DELETE_ID, 0, CONTEXT_MENU_DELETE);
+		menu.add(0, EXPORT_ID, 0, "Export list");
 	}
 
 
@@ -303,6 +306,12 @@ public class EZCart extends ListActivity {
 			mItemId = info.id;
 			renameDialog();
 			break;
+		case EXPORT_ID:
+			mItemId = info.id;
+			exportDialog();
+			break;
+			
+			
 		}
 		return super.onContextItemSelected(item);
 	}
@@ -312,7 +321,7 @@ public class EZCart extends ListActivity {
 	 */
 	private void renameDialog() {
 		Cursor list = mDbHelper.getList(mItemId);
-		String oldName = list.getString(mDbHelper.LIST_NAME_COLUMN);
+		String oldName = list.getString(DbHelper.LIST_NAME_COLUMN);
 		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
 		final EditText input =(EditText) new EditText(this);
 		input.setText(oldName);
@@ -348,6 +357,40 @@ public class EZCart extends ListActivity {
 		
 	}
 	
+	/*
+	 * Confirmation dialog for exporting lists
+	 * executes exportList if positive button is clicked
+	 */
+	private void exportDialog() {
+		AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+		dialog.setMessage(CONFIRM_DIALOG_STRING).setCancelable(false).setPositiveButton(POSITIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				exportList();
+			}
+		}).setNegativeButton(NEGATIVE, new OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				dialog.dismiss();
+			}
+		});
+		AlertDialog alertDialog = dialog.create();
+		alertDialog.show();
+	}
+	
+	/*
+	 * This exports list to sd card and reports where it was exported 
+	 * if successful
+	 */
+	private void exportList() {
+		Exporter ex= new Exporter();
+		Cursor list = mDbHelper.getList(mItemId);
+		Cursor items = mDbHelper.getAllItems(list.getString(DbHelper.TABLE_NAME_COLUMN));
+		String fileLocation = ex.exportToFile(list, items);
+		if (fileLocation!=null) Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
+	}
 	
 	/*
 	 * This method just closes database on exit
@@ -360,9 +403,29 @@ public class EZCart extends ListActivity {
 		super.onBackPressed();
 		mDbHelper.close();
 	}
-
-
-
+	
+	/*
+	 * This hides menu entries that are in the hidable group
+	 *  when list is empty
+	 * 
+	 * (non-Javadoc)
+	 * @see android.app.Activity#onMenuOpened(int, android.view.Menu)
+	 */
+	@Override
+	public boolean onMenuOpened(int featureId, Menu menu) {
+		ListAdapter listAdapter = getListAdapter();
+		int count = listAdapter.getCount();
+		if (count==0) {
+			menu.setGroupVisible(HIDABLE_GROUP, false);
+		} else if (count>0){
+			menu.setGroupVisible(HIDABLE_GROUP, true);
+		}
+		return super.onMenuOpened(featureId, menu);
+	}
+	
+	/*
+	 * Instance variables
+	 */
 	private long mItemId;
 	private int mDeleteId;
 	private DbHelper mDbHelper;

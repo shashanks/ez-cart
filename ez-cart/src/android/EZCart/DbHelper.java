@@ -41,8 +41,8 @@ public class DbHelper {
 	private static final String CREATE_LIST_TABLE ="create table " + LIST_TABLE_NAME + " (" + KEY_LIST_ROWID + " integer primary key autoincrement, "
     + KEY_LIST_NAME + " text not null, " + KEY_LIST_TABLE_NAME + " text not null "  + ");";
 
-	public final int LIST_NAME_COLUMN = 1;
-	public final int TABLE_NAME_COLUMN = 2;
+	public static final int LIST_NAME_COLUMN = 1;
+	public static final int TABLE_NAME_COLUMN = 2;
 	
 	private static class DatabaseHelper extends SQLiteOpenHelper {
 			
@@ -65,18 +65,27 @@ public class DbHelper {
 			}
 			
 		}
-	
+	/**
+	 * Constructor
+	 * @param context
+	 */
 	public DbHelper (Context context) {
 		this.mContext = context;
 		
 	}
-	
+	/**
+	 * This method opens data base
+	 * @return
+	 * @throws SQLException
+	 */
 	public DbHelper open() throws SQLException {
 		mDbHelper = new DatabaseHelper(mContext);
 		mDb = mDbHelper.getWritableDatabase();
 		return this;
 	}
-	
+	/**
+	 * This method closes database
+	 */
 	public void close() {
 		mDbHelper.close();
 	}
@@ -151,7 +160,11 @@ public class DbHelper {
 		if (counter>0) mDb.delete(LIST_TABLE_NAME, null, null);
 		return counter;
 	}
-	
+	/**
+	 * Gets list
+	 * @param id id of the list
+	 * @return list cursor
+	 */
 	public Cursor getList(long id) {
 		String[] columns = new String[] {KEY_LIST_ROWID, KEY_LIST_NAME, KEY_LIST_TABLE_NAME};
 		Cursor c = mDb.query(true, LIST_TABLE_NAME, columns, KEY_LIST_ROWID + "=" + id, null, null, null, null, null);
@@ -176,14 +189,7 @@ public class DbHelper {
 	
 	
 	
-	/**
-	 * This method checks if list table is empty
-	 * @return true if yes, false if no
-	 */
-	public boolean isListsEmpty() {
-		Cursor temp = getAllLists();
-		return !temp.moveToLast();
-	}
+	
 	/**
 	 * Creates SQL statement for creating table to be used with
 	 * execSQL.
@@ -196,10 +202,9 @@ public class DbHelper {
 	private String createSQLStatementAdd (String tableName) {
 		return "create table "+tableName+" (_id integer primary key autoincrement, "
         + DbHelper.KEY_ITEM_NAME + " text not null, " + DbHelper.KEY_ITEM_VALUE + " double not null, " 
-        + DbHelper.KEY_ITEM_QUANTITY + " integer not null, " + DbHelper.KEY_ITEM_TOTAL_ITEM_VALUE + " double not null, " + DbHelper.KEY_ITEM_DONE +" boolean not null );";
+        + DbHelper.KEY_ITEM_QUANTITY + " double not null, " + DbHelper.KEY_ITEM_TOTAL_ITEM_VALUE + " double not null, " + DbHelper.KEY_ITEM_DONE +" boolean not null );";
 	}
-	/**	private static final int LIST_NAME_COLUMN = 1;
-
+	/**	
 	 * Creates SQL statement for creating table to be used with execSQL.
 	 * This is used for creating multiple lists, this deletes table
 	 * in existing database that is used store items in list;
@@ -220,7 +225,7 @@ public class DbHelper {
 	 * @param done true if item is bought, false if item is to be bought
 	 * @return row id of the newly inserted row
 	 */
-	public long addItem (String table, String name, double value, int quantity, double totalItemValue, boolean done) {
+	public long addItem (String table, String name, double value, double quantity, double totalItemValue, boolean done) {
 		ContentValues initialValues = new ContentValues();
 		initialValues.put(KEY_ITEM_NAME, name);
 		initialValues.put(KEY_ITEM_VALUE, value);
@@ -252,7 +257,6 @@ public class DbHelper {
 	 * @return cursor holding values of all items in the list (name, price, quantity, total price, done)
 	 */
 	public Cursor getAllItems(String listName) {
-		listName = listName.replace(' ', '_');
 		String[] columns = new String[] {KEY_ITEM_ROWID, KEY_ITEM_NAME, KEY_ITEM_VALUE, KEY_ITEM_QUANTITY, KEY_ITEM_TOTAL_ITEM_VALUE, KEY_ITEM_DONE};
 		return mDb.query(listName, columns, null, null, null, null, null);
 	}
@@ -268,7 +272,7 @@ public class DbHelper {
 	 * @param done boolean true if bought, false if it is to be bought
 	 * @return boolean true succeeded, false if not 
 	 */
-	public boolean updateItem(String listName, long id, String name, double value, int quantity, double totalItemValue, boolean done) {
+	public boolean updateItem(String listName, long id, String name, double value, double quantity, double totalItemValue, boolean done) {
 		ContentValues args= new ContentValues();
 		args.put(KEY_ITEM_NAME, name);
 		args.put(KEY_ITEM_VALUE, value);
@@ -303,15 +307,7 @@ public class DbHelper {
 		return mDb.delete(listName, null, null) > 0;
 	}
 	
-	/**
-	 * This method checks if list of items is empty
-	 * @param listName table name to be checked
-	 * @return true if empty, false of not
-	 */
-	public boolean isItemsEmpty(String listName) {
-		Cursor c = getAllItems(listName);
-		return !c.moveToLast();
-	}
+	
 	
 	/**
 	 * This method checks if list with a given name already exists

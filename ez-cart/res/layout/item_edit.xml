@@ -11,7 +11,7 @@
 
 	<TableRow android:id="@+id/TableRow02" android:layout_height="wrap_content" android:layout_width="fill_parent">
 		
-	<EditText android:id="@+id/QuantityEditText" android:hint="Quantity" android:inputType="number" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_marginRight="10px" android:digits="1 2 3 4 5 6 7 8 9 0" android:nextFocusDown="@+id/PriceEditText" android:nextFocusUp="@+id/NameEditText"></EditText>
+	<EditText android:id="@+id/QuantityEditText" android:hint="Quantity" android:layout_height="wrap_content" android:layout_width="fill_parent" android:layout_weight="1" android:layout_marginRight="10px" android:nextFocusDown="@+id/PriceEditText" android:nextFocusUp="@+id/NameEditText" android:digits="1 2 3 4 5 6 7 8 9 0 ." android:inputType="numberDecimal"></EditText>
 	<EditText android:id="@+id/PriceEditText" android:hint="Price" android:inputType="numberDecimal" android:layout_height="wrap_content" android:layout_weight="1" android:layout_width="fill_parent" android:layout_marginLeft="10px" android:nextFocusDown="@+id/CheckBox01" android:nextFocusUp="@+id/QuantityEditText"></EditText>
 	
 </TableRow>
