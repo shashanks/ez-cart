@@ -20,6 +20,7 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
 import android.widget.TextView;
 import android.widget.Toast;
+import idiomatik.EZCart.R;
 
 public class ListEdit extends ListActivity {
 	/*
