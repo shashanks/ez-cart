@@ -180,8 +180,11 @@ public class ListEdit extends ListActivity {
 		Cursor list = mDbHelper.getList(mListRowId);
 		Cursor items = mDbHelper.getAllItems(mTableName);
 		String fileLocation = exp.exportToFile(list, items);
-		Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
-		
+		if (fileLocation!=null) {
+			Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
+		} else if (fileLocation==null) {
+			Toast.makeText(this, "SD card is not accessible. You can not export list.", Toast.LENGTH_LONG).show();
+		}
 	}
 	
 	/*

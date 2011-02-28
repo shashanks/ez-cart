@@ -213,8 +213,7 @@ public class EZCart extends ListActivity {
 				if (listName.length()==0) {
 					dialog.dismiss();
 					notifyEmpty();
-				}
-				if (mDbHelper.listExists(listName) == false) {
+				} else if (mDbHelper.listExists(listName) == false) {
 					long control = mDbHelper.createList(listName);
 					if (control==DbHelper.NOTIFY_TABLE_CREATION_PROBLEM) {
 						notifyProblem();
@@ -390,7 +389,11 @@ public class EZCart extends ListActivity {
 		Cursor list = mDbHelper.getList(mItemId);
 		Cursor items = mDbHelper.getAllItems(list.getString(DbHelper.TABLE_NAME_COLUMN));
 		String fileLocation = ex.exportToFile(list, items);
-		if (fileLocation!=null) Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
+		if (fileLocation!=null) {
+			Toast.makeText(this, "File exported to " + fileLocation, Toast.LENGTH_LONG).show();
+		} else if (fileLocation==null){
+			Toast.makeText(this, "SD card is not accessible. You can not export list.", Toast.LENGTH_LONG).show();
+		}
 	}
 	
 	/*
