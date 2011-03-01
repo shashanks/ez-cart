@@ -9,11 +9,15 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.CheckBox;
+import android.widget.FilterQueryProvider;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -21,6 +25,7 @@ import android.widget.SimpleCursorAdapter.ViewBinder;
 import android.widget.TextView;
 import android.widget.Toast;
 import idiomatik.EZCart.R;
+import android.view.GestureDetector;
 
 public class ListEdit extends ListActivity {
 	/*
@@ -41,6 +46,7 @@ public class ListEdit extends ListActivity {
 	 * Integer constants for data base columns 
 	 */
 	private static final int ID_COLUMN = 0;
+	private static final int NAME_COLUMN = 1;
 	private static final int TOTAL_ITEM_VALUE_COLUMN = 4;
 	private static final int DONE_COLUMN = 5;
 	private static final int LIST_NAME = 1;
@@ -65,6 +71,18 @@ public class ListEdit extends ListActivity {
 		getTableName();		
 		fillData();
 		registerForContextMenu(getListView());
+		mGestureDetector = new GestureDetector(new MyGestureDetector());
+        mGestureListener = new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                if (mGestureDetector.onTouchEvent(event)) {
+                	
+                	return true;
+                }
+                return false;
+            }
+        };
+        ListView listView = getListView();
+        listView.setOnTouchListener(mGestureListener);
 	}
 	
 	/*
@@ -120,6 +138,7 @@ public class ListEdit extends ListActivity {
     	
     	SimpleCursorAdapter shoppingList = new SimpleCursorAdapter(this, R.layout.item_row, list, from, to);
     	shoppingList.setViewBinder(binder);
+    	
     	setListAdapter(shoppingList);
     	calculateTotal();
     	
@@ -196,6 +215,7 @@ public class ListEdit extends ListActivity {
 	private void uncheckAllItems() {
 		Cursor items = mDbHelper.getAllItems(mTableName);
 		items.moveToFirst();
+		
 		for (items.move(-1); items.moveToNext(); items.isAfterLast()) {
 			if (items.getInt(DONE_COLUMN)==1) {
 				mDbHelper.updateDone(mTableName, items.getLong(ID_COLUMN), false);
@@ -452,9 +472,41 @@ public class ListEdit extends ListActivity {
 		}
 		return super.onMenuOpened(featureId, menu);
 	}
+	
+	
+	
+	private class MyGestureDetector extends SimpleOnGestureListener {
+		
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+			if (e2 == null || e1 == null)
+                return true;
 
+            float deltaX = e2.getX() - e1.getX(),
+                  deltaY = e2.getY() - e1.getY();
+            
+            boolean horisontalSwipe = (Math.abs(deltaX) > Math.abs(deltaY * 3));
+            boolean steadyHand = (Math.abs(deltaX / deltaY) > 2);
+            
+            if (horisontalSwipe && steadyHand) {
+               int position = getListView().pointToPosition((int)e1.getX(), (int)e1.getY());
 
+                if (position != AdapterView.INVALID_POSITION) {
+                	Cursor item = (Cursor) getListAdapter().getItem(position);
+                	long id = item.getLong(ID_COLUMN);
+                	Intent i = new Intent(getApplicationContext(), ItemEdit.class);
+        			i.putExtra(DbHelper.KEY_ITEM_ROWID, id);
+        			i.putExtra(DbHelper.KEY_ITEM_TABLE_NAME, mTableName);
+        			startActivityForResult(i, ACTIVITY_EDIT);
+                }
+            }
+            return false;
+		} 
+		
+	}
 
+	private GestureDetector mGestureDetector;
+    private View.OnTouchListener mGestureListener;
 	private int mDeleteId;
 	private long mItemId;
 	private String mTableName;

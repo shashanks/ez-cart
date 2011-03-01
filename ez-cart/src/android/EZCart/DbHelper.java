@@ -180,7 +180,7 @@ public class DbHelper {
 	 */
 	public Cursor getAllLists() {
 		String[] columns = new String[] {KEY_LIST_ROWID, KEY_LIST_NAME, KEY_LIST_TABLE_NAME};
-		Cursor c = mDb.query(LIST_TABLE_NAME, columns, null, null, null, null, null, null);
+		Cursor c = mDb.query(LIST_TABLE_NAME, columns, null, null, null, null, KEY_LIST_NAME, null);
 		if (c!=null) {
 			c.moveToFirst();
 		}
@@ -258,7 +258,7 @@ public class DbHelper {
 	 */
 	public Cursor getAllItems(String listName) {
 		String[] columns = new String[] {KEY_ITEM_ROWID, KEY_ITEM_NAME, KEY_ITEM_VALUE, KEY_ITEM_QUANTITY, KEY_ITEM_TOTAL_ITEM_VALUE, KEY_ITEM_DONE};
-		return mDb.query(listName, columns, null, null, null, null, null);
+		return mDb.query(listName, columns, null, null, null, null, KEY_ITEM_NAME );
 	}
 	
 	/**

@@ -47,7 +47,8 @@ public class Exporter {
 			File path = new File("/mnt/sdcard/EZCart", "Exported");
 			path.mkdirs();
 			Date date = new Date();
-			String currentDate =DateFormat.getDateInstance().format(date) + "_" + date.getHours() + "_" + date.getMinutes();
+			String currentDate = DateFormat.getDateInstance().format(date) + "_" + date.getHours() + "_" + date.getMinutes();
+			String currentTime = DateFormat.getDateInstance().format(date) + " " + date.getHours() + ":" + date.getMinutes();
 			String filename = listName + "_" + currentDate + ".csv";
 			filename = filename.replace(", ", "_");
 			filename = filename.replace(' ', '_');
@@ -68,7 +69,7 @@ public class Exporter {
 					
 				}
 				currentDate.trim();
-				wr.write(currentDate + "\n" +"Name" + ";" + "Price" + ";" + "Items" + ";" + "Total" + "\n");
+				wr.write(currentTime + "\n" +"Name" + ";" + "Price per item" + ";" + "Number of tems" + ";" + "Total" + "\n");
 				wr.write(lineDone);
 				wr.write("\n" + "Theese items were not bought" + "\n\n");
 				wr.write(lineNotDone);

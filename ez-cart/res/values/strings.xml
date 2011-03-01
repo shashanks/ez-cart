@@ -2,9 +2,9 @@
 <resources>
     <string name="hello">Hello World, main!</string>
     <string name="app_name">EZ Cart</string>
-	<string name="no_lists">There are no lists currently. \nHit menu and create list</string>
+	<string name="no_lists">There are no lists currently. Hit menu and create list. \n\nLong click on list brings up additional options</string>
 	<string name="item_value">Price per item:  </string>
 	<string name="number_of_items">Quantity:</string>
 	<string name="row_click_handler">myClickHandler</string>
-<string name="no_items">There are no items currently. \nHit menu and add items</string>
+<string name="no_items">There are no items currently. Hit menu and add items. \n\nLong click on item opens up additional menu, and horizontal swipe on item starts item editor</string>
 </resources>
