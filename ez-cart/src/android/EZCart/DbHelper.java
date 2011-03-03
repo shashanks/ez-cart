@@ -175,10 +175,12 @@ public class DbHelper {
 	}
 	
 	/**
-	 * Gets all lists from the LIST_TABLE_NAME
+	 * Gets all lists from the LIST_TABLE_NAME sorted
+	 * by name. It is used to display existing lists sorted alphabetically 
+	 * in EZCart activity
 	 * @return cursor with all lists
 	 */
-	public Cursor getAllLists() {
+	public Cursor getAllListsSorted() {
 		String[] columns = new String[] {KEY_LIST_ROWID, KEY_LIST_NAME, KEY_LIST_TABLE_NAME};
 		Cursor c = mDb.query(LIST_TABLE_NAME, columns, null, null, null, null, KEY_LIST_NAME, null);
 		if (c!=null) {
@@ -187,8 +189,20 @@ public class DbHelper {
 		return c;
 	}
 	
-	
-	
+	/**
+	 * Gets all lists from the LIST_TABLE_NAME
+	 * It is used to determine id of the last list in create
+	 * list method.
+	 * @return cursor with all lists
+	 */
+	public Cursor getAllLists() {
+		String[] columns = new String[] {KEY_LIST_ROWID, KEY_LIST_NAME, KEY_LIST_TABLE_NAME};
+		Cursor c = mDb.query(LIST_TABLE_NAME, columns, null, null, null, null, null, null);
+		if (c!=null) {
+			c.moveToFirst();
+		}
+		return c;
+	}
 	
 	/**
 	 * Creates SQL statement for creating table to be used with
@@ -319,7 +333,7 @@ public class DbHelper {
 	 * @return boolean true if exists, false otherwise
 	 */
 	public boolean listExists(String listName) {
-		Cursor c = getAllLists();
+		Cursor c = getAllListsSorted();
 		c.moveToFirst();
 		ArrayList<String> listOfNames = new ArrayList<String>();
 		for (c.move(-1); c.moveToNext(); c.isAfterLast()) {

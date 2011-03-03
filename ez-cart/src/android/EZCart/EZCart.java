@@ -100,7 +100,7 @@ public class EZCart extends ListActivity {
      * list activity
      */
     private void fillData() {
-		Cursor listsCursor = mDbHelper.getAllLists();
+		Cursor listsCursor = mDbHelper.getAllListsSorted();
 		startManagingCursor(listsCursor);
 		
 		/*
