@@ -7,27 +7,40 @@
 
 package android.EZCart;
 
+import idiomatik.EZCart.R;
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import idiomatik.EZCart.R;
 
 public class ItemEdit extends Activity{
+	
+	private static final int ACTIVITY_EDIT=1;
+	
+	private static final String EDIT_HISTORY = "Edit history";
+	private static final int EDIT_HISTORY_ID = Menu.FIRST;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mDbHelper = new DbHelper(this);
 		mDbHelper.open();
+		mHistory = new History(this);
+		mHistory.open();
 		setContentView(R.layout.item_edit);
 		
 		Bundle listName = getIntent().getExtras();
 		
 		mListName = listName.getString(DbHelper.KEY_ITEM_TABLE_NAME);
-		mNameEditText = (EditText) findViewById(R.id.NameEditText);
+		mNameEditText = (AutoCompleteTextView) findViewById(R.id.NameEditText);
 		mQuantityEditText = (EditText) findViewById(R.id.QuantityEditText);
 		mQuantityEditText.setSelectAllOnFocus(true);
 		mPriceEditText = (EditText) findViewById(R.id.PriceEditText);
@@ -55,6 +68,8 @@ public class ItemEdit extends Activity{
 				finish();
 			}
 		});
+		ArrayAdapter<String> adapter = new ArrayAdapter<String> (this, R.layout.history_list, mHistory.getHistory());
+		mNameEditText.setAdapter(adapter);
 	}
 	/*
 	 * This populates fields. if it comes back from suspended activity
@@ -139,6 +154,8 @@ public class ItemEdit extends Activity{
 	@Override
 	protected void onResume() {
 		super.onResume();
+		ArrayAdapter<String> adapter = new ArrayAdapter<String> (this, R.layout.history_list, mHistory.getHistory());
+		mNameEditText.setAdapter(adapter);
 		populateFields();
 		if (mPaused) removeTempEntry();
 		
@@ -184,16 +201,44 @@ public class ItemEdit extends Activity{
 		double totalPrice =(double) (Math.round(quantity*price*100))/100;
 		boolean done = mDoneCheckBox.isChecked();
 		if (mRowId == null) {
+			if (mHistory.itemExists(name)==false && name.length()!=0) mHistory.addItemToHistory(name);
 			long id = mDbHelper.addItem(mListName, name, price, quantity, totalPrice, done);
 			if (id > 0) {
 				mRowId = id;
 			}
 		} else {
-			mDbHelper.updateItem(mListName, mRowId, name, price, quantity, totalPrice, done);
+		  mDbHelper.updateItem(mListName, mRowId, name, price, quantity, totalPrice, done);
+		  if (mHistory.itemExists(name)==false && name.length()!=0) mHistory.addItemToHistory(name);
 		}
 	
 	}
-
+	
+	 /*
+     * This adds menu for editing history
+     * 
+     * (non-Javadoc)
+     * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
+     */
+    @Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		menu.add(0, EDIT_HISTORY_ID, 0, EDIT_HISTORY);
+		return true;
+	}
+    public boolean onMenuItemSelected(int id, MenuItem item) {
+    	switch (item.getItemId()) {
+    	case EDIT_HISTORY_ID:
+    		editHistory();
+    		return true;
+    	}
+    	return false;
+    }
+    
+    private void editHistory() {
+    	Intent i = new Intent(this, HistoryEdit.class);
+    	startActivityForResult(i, ACTIVITY_EDIT);
+    }
+    
 	/*
 	 * Instance variables
 	 */
@@ -205,9 +250,11 @@ public class ItemEdit extends Activity{
 	private Long mTempRowId;
 	
 	private String mListName;
-	private EditText mNameEditText;
+	private AutoCompleteTextView mNameEditText;
 	private EditText mQuantityEditText;
 	private EditText mPriceEditText;
 	private CheckBox mDoneCheckBox;
 	private DbHelper mDbHelper;
+	private History mHistory;
+	
 }

@@ -5,7 +5,7 @@
 
 	<TableRow android:id="@+id/TableRow01" android:layout_height="wrap_content" android:layout_width="fill_parent">
 		
-	<EditText android:id="@+id/NameEditText" android:hint="Name" android:layout_height="wrap_content" android:layout_width="fill_parent" android:paddingRight="20px" android:lines="1" android:inputType="textCapSentences" android:nextFocusDown="@+id/QuantityEditText"></EditText>
+	<AutoCompleteTextView android:id="@+id/NameEditText" android:layout_height="wrap_content" android:layout_width="fill_parent" android:paddingRight="20px" android:lines="1" android:inputType="textCapSentences" android:nextFocusDown="@+id/QuantityEditText" android:completionThreshold="1" android:hint="Name (hit menu to edit history) "></AutoCompleteTextView>
 		
 </TableRow>
 

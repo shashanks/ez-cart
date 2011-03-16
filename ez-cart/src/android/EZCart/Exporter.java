@@ -69,7 +69,7 @@ public class Exporter {
 					
 				}
 				currentDate.trim();
-				wr.write(currentTime + "\n" +"Name" + ";" + "Price per item" + ";" + "Number of tems" + ";" + "Total" + "\n");
+				wr.write(currentTime + "\n" +"Name" + ";" + "Price per item" + ";" + "Quantity" + ";" + "Total" + "\n");
 				wr.write(lineDone);
 				wr.write("\n" + "Theese items were not bought" + "\n\n");
 				wr.write(lineNotDone);

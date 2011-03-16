@@ -1,6 +1,6 @@
 /*
  * EZ Cart
- * Version: 0.40
+ * Version: 0.7
  * License: GPLv3
  * Author: idiomatik.80@gmail.com (Nikola Trandafilovic)
  * 

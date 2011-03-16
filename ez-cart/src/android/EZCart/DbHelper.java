@@ -210,7 +210,7 @@ public class DbHelper {
 	 * This is used for creating multiple lists, this creates table
 	 * in existing database that is used store items in list;
 	 * 
-	 * @param tableName name of the table to be created in Database
+	 * @param tableNaDatabaseme name of the table to be created in Database
 	 * @return
 	 */
 	private String createSQLStatementAdd (String tableName) {
@@ -232,7 +232,7 @@ public class DbHelper {
 	/**
 	 * This method inserts item in the list 
 	 * @param table name of the list
-	 * @param name name of the item
+	 * @param name nDatabaseame of the item
 	 * @param value price of the item
 	 * @param quantity number of items
 	 * @param totalItemValue total value of the item (value*quantity)

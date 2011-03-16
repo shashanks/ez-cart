@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="idiomatik.EZCart"
-      android:versionName="0.6" android:versionCode="7">
+      android:versionName="0.7" android:versionCode="8">
     <application android:label="@string/app_name" android:icon="@drawable/ezcart" android:debuggable="false">
         <activity android:label="@string/app_name" android:name="android.EZCart.EZCart">
             <intent-filter>
@@ -12,6 +12,7 @@
 
     <activity android:name="android.EZCart.ListEdit"></activity>
 <activity android:name="android.EZCart.ItemEdit" android:screenOrientation="portrait"></activity>
+<activity android:name="android.EZCart.HistoryEdit"></activity>
 </application>
     <uses-sdk android:minSdkVersion="7" />
 
